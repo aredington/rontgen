@@ -1,9 +1,10 @@
 (ns rontgen
+  (:require [clojure.core.cache :as cache])
   (:import (java.lang.reflect Modifier Field)))
 
-(def ^:private instance-read-strategies (atom {}))
-(def ^:private class-read-strategies (atom {}))
-(def ^:private class-write-strategies (atom {}))
+(def ^:private instance-read-strategies (cache/lirs-cache-factory {}))
+(def ^:private class-read-strategies (cache/lirs-cache-factory {}))
+(def ^:private instance-write-strategies (cache/lirs-cache-factory {}))
 
 (defn instance-fields
   [^Class class static-fn]
@@ -17,49 +18,58 @@
 (defn- read-strategy
   [instance]
   (let [^Class class (class instance)
-        [cache static-fn] (if (= class Class)
-                            [class-read-strategies filter]
-                            [instance-read-strategies remove])]
-    (if (find @cache class)
-      (@cache class)
-      (let [fields (instance-fields class static-fn)
-            strategy (fn [obj]
-                       (locking obj
-                         (into {} (for [^Field field fields]
-                                    [(keyword (.getName field)) (.get field obj)]))))]
-        ((swap! cache assoc class strategy) class)))))
+        static-fn (if (= class Class) filter remove)
+        fields (instance-fields class static-fn)]
+    (fn [obj]
+      (locking obj
+        (into {} (for [^Field field fields]
+                   [(keyword (.getName field)) (.get field obj)]))))))
 
 (defn- write-strategy
   [instance]
   (let [^Class class (class instance)]
     (when (= class Class)
       (throw (ex-info "Cannot bash a class" {:instance instance})))
-    (if (find @class-write-strategies class)
-      (@class-write-strategies class)
-      (let [fields (instance-fields class remove)
-            field-accessors (into {} (for [^Field field fields]
-                                       [(.getName field) field]))
-            strategy (fn [obj map]
-                       (locking obj
-                         (doseq [key (keys map)]
-                           (let [name (name key)
-                                 ^Field field (field-accessors name)
-                                 newval (map key)]
-                             (.set field obj newval)))))]
-        ((swap! class-write-strategies assoc class strategy) class)))))
+    (let [fields (instance-fields class remove)
+          field-accessors (into {} (for [^Field field fields]
+                                     [(.getName field) field]))]
+      (fn [obj map]
+                     (locking obj
+                       (doseq [key (keys map)]
+                         (let [name (name key)
+                               ^Field field (field-accessors name)
+                               newval (map key)]
+                           (.set field obj newval))))))))
+
+(defn find-strategy-in-cache
+  [cache strategy strategy-factory]
+  (cache/lookup
+   (if (cache/has? cache class)
+     (cache/hit cache class)
+     (cache/miss cache class (strategy-factory)))
+   class))
 
 (defn peer
   "Returns a map in which the keys correspond to all of the declared
   fields of instance, and the values are the present values of those
   fields. Obtains a lock on instance prior to reading any fields."
   [instance]
-  (let [strategy (read-strategy instance)]
+  (let [class (class instance)
+        cache (if (= Class class)
+                class-read-strategies
+                instance-read-strategies)
+        strategy (find-strategy-in-cache cache
+                                         class
+                                         #(read-strategy instance))]
     (strategy instance)))
 
 (defn bash
   "Installs the corresponding values into map for all of the keys in
   map which have corresponding fields in instance."
   [instance map]
-  (let [strategy (write-strategy instance)]
+  (let [class (class instance)
+        strategy (find-strategy-in-cache instance-write-strategies
+                                         class
+                                         #(write-strategy instance))]
     (strategy instance map)
     instance))
