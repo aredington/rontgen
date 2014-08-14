@@ -3,4 +3,4 @@
   :url "http://github.com/aredington/rontgen"
   :license {:name "MIT License"
             :url "http://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.6"]])
+  :dependencies [[org.clojure/clojure "1.6.0"]])
