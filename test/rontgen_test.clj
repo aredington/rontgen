@@ -11,27 +11,10 @@
 
 (deftest class-support
   (let [result (peer String)]
-    (is (= [:serialPersistentFields
-            :ANNOTATION
-            :reflectionFactory
-            :allPermDomain
-            :SYNTHETIC
-            :useCaches
-            :serialVersionUID
-            :initted
-            :ENUM] (keys result)))
-    (is (= {:ANNOTATION 8192
-            :allPermDomain nil
-            :SYNTHETIC 4096
-            :useCaches true
-            :serialVersionUID 3206093459760846163
-            :initted true
-            :ENUM 16384}
-           (select-keys result [:ANNOTATION
-                                :allPermDomain
-                                :SYNTHETIC
-                                :useCaches
-                                :serialVersionUID
-                                :initted
-                                :ENUM])))
+    (is (= [:serialVersionUID
+            :serialPersistentFields
+            :CASE_INSENSITIVE_ORDER
+            :HASHING_SEED] (keys result)))
+    (is (= {:serialVersionUID -6849794470754667710}
+           (select-keys result [:serialVersionUID])))
     (is (thrown? clojure.lang.ExceptionInfo (bash String {:useCaches false})))))

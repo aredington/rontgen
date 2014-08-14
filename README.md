@@ -1,5 +1,7 @@
 # rontgen
 
+Leiningen dependency (Clojars): `[rontgen "0.000000000001.0"]`.
+
 Röntgen is sharp, dangerous, and highly opinionated java
 interop. Röntgen can *peer* upon any java instance, returning an
 immutable map that shows the state of all the fields of that
@@ -19,6 +21,11 @@ user> (let [date (java.util.Date. 0)] (rontgen/peer date))
 ```clojure
 user> (let [date (java.util.Date. 0)] (rontgen/bash date {:fastTime 6000}))
 #inst "1970-01-01T00:00:06.000-00:00"
+```
+
+```clojure
+user> (rontgen/peer java.util.Calendar)
+{:TUESDAY 3, :MONTH_MASK 4, :DAY_OF_WEEK_IN_MONTH_MASK 256, :cachedLocaleData {}, :SATURDAY 7, :JANUARY 0, :MINUTE 12, :DAY_OF_YEAR_MASK 64, :ERA 0, :MARCH 2, :COMPUTED 1, :DST_OFFSET_MASK 65536, :YEAR_MASK 2, :DATE 5, :FRIDAY 6, :AM_PM 9, :WEEK_OF_MONTH_MASK 16, :DAY_OF_WEEK 7, :DAY_OF_MONTH_MASK 32, :MINIMUM_USER_STAMP 2, :DAY_OF_WEEK_MASK 128, :MONDAY 2, :HOUR_MASK 1024, :PM 1, :$assertionsDisabled true, :WEEK_OF_YEAR 3, :HOUR_OF_DAY_MASK 2048, :ZONE_OFFSET 15, :DST_OFFSET 16, :JUNE 5, :currentSerialVersion 1, :DECEMBER 11, :MILLISECOND 14, :AUGUST 7, :MONTH 2, :ALL_FIELDS 131071, :NOVEMBER 10, :YEAR 1, :HOUR 10, :THURSDAY 5, :FIELD_NAME #<String[] [Ljava.lang.String;@24b0d6c7>, :DAY_OF_WEEK_IN_MONTH 8, :UNSET 0, :WEEK_OF_MONTH 4, :SEPTEMBER 8, :FIELD_COUNT 17, :MINUTE_MASK 4096, :SECOND 13, :WEEK_OF_YEAR_MASK 8, :SHORT 1, :serialVersionUID -1807547505821590642, :WEDNESDAY 4, :APRIL 3, :SUNDAY 1, :JULY 6, :HOUR_OF_DAY 11, :DAY_OF_MONTH 5, :LONG 2, :ALL_STYLES 0, :UNDECIMBER 12, :ZONE_OFFSET_MASK 32768, :FEBRUARY 1, :SECOND_MASK 8192, :ERA_MASK 1, :MILLISECOND_MASK 16384, :DATE_MASK 32, :OCTOBER 9, :MAY 4, :AM 0, :DAY_OF_YEAR 6, :AM_PM_MASK 512}
 ```
 
 ## License

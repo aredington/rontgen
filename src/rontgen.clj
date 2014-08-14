@@ -18,8 +18,8 @@
 (defn- read-strategy
   [instance]
   (let [^Class class (class instance)
-        static-fn (if (= class Class) filter remove)
-        fields (instance-fields class static-fn)]
+        [target static-fn] (if (= class Class) [instance filter] [class remove])
+        fields (instance-fields target static-fn)]
     (fn [obj]
       (locking obj
         (into {} (for [^Field field fields]
