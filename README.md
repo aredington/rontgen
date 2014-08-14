@@ -1,6 +1,13 @@
 # rontgen
 
-Röntgen
+Röntgen is sharp, dangerous, and highly opinionated java
+interop. Röntgen can *peer* upon any java instance, returning an
+immutable map that shows the state of all the fields of that
+instance. Röntgen can also *bash* into any java instance an immutable
+map of values, destructively modifying the instance in order to push
+data in place.
+
+Röntgen ignores private and protected modifiers for fields.
 
 ## Usage
 
