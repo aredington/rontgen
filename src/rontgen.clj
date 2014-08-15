@@ -27,19 +27,25 @@
 
 (defn- write-strategy
   [instance]
-  (let [^Class class (class instance)]
-    (when (= class Class)
-      (throw (ex-info "Cannot bash a class" {:instance instance})))
-    (let [fields (instance-fields class remove)
-          field-accessors (into {} (for [^Field field fields]
-                                     [(.getName field) field]))]
-      (fn [obj map]
-                     (locking obj
-                       (doseq [key (keys map)]
-                         (let [name (name key)
-                               ^Field field (field-accessors name)
-                               newval (map key)]
-                           (.set field obj newval))))))))
+  (let [^Class class (class instance)
+        [target static-fn] (if (= class Class) [instance filter] [class remove])
+        fields (instance-fields target static-fn)
+        field-accessors (into {} (for [^Field field fields]
+                                   [(.getName field) field]))]
+    (fn [obj map]
+      (locking obj
+        (doseq [key (keys map)]
+          (let [name (name key)
+                ^Field field (field-accessors name)
+                newval (map key)]
+            (when (nil? field)
+              (throw (ex-info (str "Cannot write to field " field)
+                              {:key key
+                               :obj obj
+                               :name name
+                               :field field
+                               :newval newval})))
+            (.set field obj newval)))))))
 
 (defn find-strategy-in-cache
   [cache strategy strategy-factory]

@@ -18,3 +18,10 @@
     (is (= {:serialVersionUID -6849794470754667710}
            (select-keys result [:serialVersionUID])))
     (is (thrown? clojure.lang.ExceptionInfo (bash String {:useCaches false})))))
+
+(deftest dangerous-class-support
+  (let [result (peer clojure.lang.RT)]
+    (is (= :file (:FILE_KEY result)))
+    (bash clojure.lang.RT {:FILE_KEY :directory})
+    (is (= :directory (:FILE_KEY (peer clojure.lang.RT))))
+    (bash clojure.lang.RT {:FILE_KEY :file})))
