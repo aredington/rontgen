@@ -6,6 +6,11 @@
 (def ^:private class-read-strategies (cache/lirs-cache-factory {}))
 (def ^:private instance-write-strategies (cache/lirs-cache-factory {}))
 
+(def ^:dynamic *lock-acquisition-fn*
+  (fn [obj action]
+    (locking obj
+      (action obj))))
+
 (defn instance-fields
   [^Class class static-fn]
   (let [fields (.getDeclaredFields class)
@@ -21,9 +26,9 @@
         [target static-fn] (if (= class Class) [instance filter] [class remove])
         fields (instance-fields target static-fn)]
     (fn [obj]
-      (locking obj
-        (into {} (for [^Field field fields]
-                   [(keyword (.getName field)) (.get field obj)]))))))
+      (*lock-acquisition-fn* obj
+                             #(into {} (for [^Field field fields]
+                                         [(keyword (.getName field)) (.get field %)]))))))
 
 (defn- write-strategy
   [instance]
@@ -33,19 +38,19 @@
         field-accessors (into {} (for [^Field field fields]
                                    [(.getName field) field]))]
     (fn [obj map]
-      (locking obj
-        (doseq [key (keys map)]
+      (*lock-acquisition-fn* obj
+        #(doseq [key (keys map)]
           (let [name (name key)
                 ^Field field (field-accessors name)
                 newval (map key)]
             (when (nil? field)
               (throw (ex-info (str "Cannot write to field " field)
                               {:key key
-                               :obj obj
+                               :obj %
                                :name name
                                :field field
                                :newval newval})))
-            (.set field obj newval)))))))
+            (.set field % newval)))))))
 
 (defn find-strategy-in-cache
   [cache strategy strategy-factory]
