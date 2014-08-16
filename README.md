@@ -1,6 +1,6 @@
 # rontgen
 
-Leiningen dependency (Clojars): `[rontgen "0.000000000001.0"]`.
+Leiningen dependency (Clojars): `[rontgen "1.000000000001.0"]`.
 
 Röntgen is sharp, dangerous, and highly opinionated java
 interop. Röntgen can *peer* upon any java instance, returning an
